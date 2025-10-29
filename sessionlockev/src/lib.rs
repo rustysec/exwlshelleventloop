@@ -619,13 +619,19 @@ impl<T: 'static> Dispatch<wl_seat::WlSeat, ()> for WindowState<T> {
             capabilities: WEnum::Value(capabilities),
         } = event
         {
-            if capabilities.contains(wl_seat::Capability::Keyboard) {
+            if capabilities.is_empty() && state.keyboard_state.is_some() {
+                let keyboard = state.keyboard_state.take().unwrap();
+                drop(keyboard);
+            }
+            if capabilities.contains(wl_seat::Capability::Keyboard)
+                && state.keyboard_state.is_none()
+            {
                 state.keyboard_state = Some(KeyboardState::new(seat.get_keyboard(qh, ())));
             }
-            if capabilities.contains(wl_seat::Capability::Pointer) {
+            if capabilities.contains(wl_seat::Capability::Pointer) && state.pointer.is_none() {
                 state.pointer = Some(seat.get_pointer(qh, ()));
             }
-            if capabilities.contains(wl_seat::Capability::Touch) {
+            if capabilities.contains(wl_seat::Capability::Touch) && state.touch.is_none() {
                 state.touch = Some(seat.get_touch(qh, ()));
             }
         }
